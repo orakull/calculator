@@ -13,6 +13,8 @@ class ViewController: UIViewController
 
     @IBOutlet weak var history: UILabel!
     @IBOutlet weak var display: UILabel!
+    
+    var brain = CalculatorBrain()
 
     var userIsInMiddleOfTyping = false
     
@@ -43,74 +45,59 @@ class ViewController: UIViewController
         if userIsInMiddleOfTyping {
             enter()
         }
-        switch sender.currentTitle! {
-        case "×":   performOperation(sender.currentTitle!, { $0 * $1 })
-        case "÷":   performOperation(sender.currentTitle!, { $1 / $0 })
-        case "+":   performOperation(sender.currentTitle!, { $0 + $1 })
-        case "−":   performOperation(sender.currentTitle!, { $1 - $0 })
-        case "√":   performOperation(sender.currentTitle!, { sqrt($0) })
-        case "sin": performOperation(sender.currentTitle!, { sin($0) })
-        case "cos": performOperation(sender.currentTitle!, { cos($0) })
-        case "π":   performOperation(M_PI)
-        default: break
+        if let operation = sender.currentTitle {
+            if let result = brain.performOperation(operation) {
+                displayValue = result 
+            }
+            else {
+                displayValue = 0
+            }
         }
-    }
-    
-    func performOperation(sign: String, operation: (Double, Double) -> Double) {
-        if operandStack.count >= 2 {
-            history.text = sign + "  " + history.text!
-            displayValue = operation(operandStack.removeLast(), operandStack.removeLast())
-            enter()
-        }
-    }
-    
-    func performOperation(sign: String, operation: (Double) -> Double) {
-        if operandStack.count >= 1 {
-            history.text = sign + "  " + history.text!
-            displayValue = operation(operandStack.removeLast())
-            enter()
-        }
-    }
-    
-    func performOperation(const: Double) {
-        if userIsInMiddleOfTyping { enter() }
-        displayValue = const
-        enter()
     }
 
-    var operandStack = Array<Double>()
-    
     var displayValue: Double? {
         get {
             let number = NSNumberFormatter().numberFromString(display.text!)
             return number == nil ? nil : number!.doubleValue
         }
         set {
-            display.text = "\(newValue!)"
+            if let value = newValue {
+                let text = "\(value)"
+                display.text = text.hasSuffix(".0") ? dropLast(dropLast(text)) : text
+            }
+            else {
+                display.text = ""
+            }
         }
     }
     
     @IBAction func enter() {
         userIsInMiddleOfTyping = false
-        operandStack.append(displayValue!)
-        println("stack = \(operandStack)")
-        history.text! = "\(displayValue!)  " + history.text!
+        if let result = brain.pushOperand(displayValue!) {
+            displayValue = result
+        }
+        else {
+            displayValue = 0
+        }
     }
     
     @IBAction func clear() {
         display.text = "0"
         userIsInMiddleOfTyping = false
-        operandStack.removeAll(keepCapacity: false)
+        brain.clear()
         history.text = ""
     }
     
     @IBAction func backspace() {
         if userIsInMiddleOfTyping {
-            if countElements(display.text!) > (display.text!.hasPrefix("-") ? 2 : 1) {
-                display.text = dropLast(display.text!)
-            } else {
-                display.text = "0"
-                userIsInMiddleOfTyping = false
+            if let value = display.text {
+                switch countElements(value) {
+                case 1: display.text = "0"
+                case 2: display.text = value.hasPrefix("-") ? "0" : dropLast(value)
+                case 3: display.text = value == "-0." ? "0" : dropLast(value)
+                default: display.text = dropLast(value)
+                }
+                userIsInMiddleOfTyping = display.text != "0"
             }
         }
     }
