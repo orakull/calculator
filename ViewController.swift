@@ -14,7 +14,7 @@ class ViewController: UIViewController
     @IBOutlet weak var history: UILabel!
     @IBOutlet weak var display: UILabel!
     
-    var brain = CalculatorBrain()
+    lazy var brain = CalculatorBrain()
 
     var userIsInMiddleOfTyping = false
     
@@ -53,6 +53,7 @@ class ViewController: UIViewController
                 displayValue = 0
             }
         }
+        history.text = brain.description
     }
 
     var displayValue: Double? {
@@ -79,13 +80,14 @@ class ViewController: UIViewController
         else {
             displayValue = 0
         }
+        history.text = brain.description
     }
     
     @IBAction func clear() {
         display.text = "0"
         userIsInMiddleOfTyping = false
         brain.clear()
-        history.text = ""
+        history.text = " "
     }
     
     @IBAction func backspace() {
