@@ -46,12 +46,7 @@ class ViewController: UIViewController
             enter()
         }
         if let operation = sender.currentTitle {
-            if let result = brain.performOperation(operation) {
-                displayValue = result 
-            }
-            else {
-                displayValue = 0
-            }
+            displayValue = brain.performOperation(operation)
         }
         history.text = brain.description + "="
     }
@@ -67,19 +62,14 @@ class ViewController: UIViewController
                 display.text = text.hasSuffix(".0") ? dropLast(dropLast(text)) : text
             }
             else {
-                display.text = ""
+                display.text = " "
             }
         }
     }
     
     @IBAction func enter() {
         userIsInMiddleOfTyping = false
-        if let result = brain.pushOperand(displayValue!) {
-            displayValue = result
-        }
-        else {
-            displayValue = 0
-        }
+        displayValue = brain.pushOperand(displayValue!)
         history.text = brain.description + "="
     }
     
@@ -87,6 +77,7 @@ class ViewController: UIViewController
         display.text = "0"
         userIsInMiddleOfTyping = false
         brain.clear()
+        brain.variableValues.removeAll(keepCapacity: false)
         history.text = " "
     }
     
@@ -102,6 +93,23 @@ class ViewController: UIViewController
                 userIsInMiddleOfTyping = display.text != "0"
             }
         }
+    }
+    
+    @IBAction func pushVariable() {
+        if userIsInMiddleOfTyping { userIsInMiddleOfTyping = false }
+        if let value = displayValue {
+            brain.variableValues["M"] = value
+            displayValue = brain.evaluate()
+        }
+        else {
+            brain.variableValues["M"] = nil
+        }
+    }
+    
+    @IBAction func popVariable() {
+        if userIsInMiddleOfTyping { enter() }
+        displayValue = brain.pushOperand("M")
+        history.text = brain.description + "="
     }
 }
 

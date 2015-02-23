@@ -40,7 +40,7 @@ class CalculatorBrain: Printable
     
     private var knownOps = [String:Op]()
     
-    private var variableValues = [String:Double]()
+    var variableValues = [String:Double]()
     
     init() {
         func learnOp(op: Op) {
@@ -118,7 +118,7 @@ class CalculatorBrain: Printable
             case .Operand(let operand):
                 return ("\(operand)", remainngOps, false)
             case .Variable(let symbol):
-                return ("\(variableValues[symbol])", remainngOps, false) // TODO: make Optional
+                return ("\(symbol)", remainngOps, false) // TODO: make Optional
             case .NullaryOperation(_, _):
                 return (op.description, remainngOps, false)
             case .UnaryOperation(_, _):
@@ -128,10 +128,10 @@ class CalculatorBrain: Printable
             case .BinaryOperation(_, _, let needParentheses):
                 let desc1 = description(remainngOps)
                 var A = desc1.result ?? "?"
-                A = desc1.needParentheses ? "(\(A))" : A
+                A = desc1.needParentheses && !needParentheses ? "(\(A))" : A
                 let desc2 = description(desc1.remainngOps)
                 var B = desc2.result ?? "?"
-                B = desc2.needParentheses ? "(\(B))" : B
+                B = desc2.needParentheses && !needParentheses ? "(\(B))" : B
                 return ("\(B)\(op)\(A)", desc2.remainngOps, needParentheses)
             }
         }
