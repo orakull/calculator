@@ -53,7 +53,7 @@ class ViewController: UIViewController
                 displayValue = 0
             }
         }
-        history.text = brain.description
+        history.text = brain.description + "="
     }
 
     var displayValue: Double? {
@@ -80,7 +80,7 @@ class ViewController: UIViewController
         else {
             displayValue = 0
         }
-        history.text = brain.description
+        history.text = brain.description + "="
     }
     
     @IBAction func clear() {
