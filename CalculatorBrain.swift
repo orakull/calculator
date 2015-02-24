@@ -16,7 +16,17 @@ class CalculatorBrain: Printable
         case Variable(String)
         case NullaryOperation(String, Double)
         case UnaryOperation(String, Double -> Double)
-        case BinaryOperation(String, (Double, Double) -> Double, Bool)
+        case BinaryOperation(String, (Double, Double) -> Double, (precedence:Int, positionValuable:Bool))
+        
+        /// Приоритет выполнения операции
+        var precedence: Int {
+            switch self {
+            case .BinaryOperation(_, _, (precedence: let precedence, positionValuable: _)):
+                return precedence
+            default:
+                return 200
+            }
+        }
         
         var description: String {
             get {
@@ -46,10 +56,10 @@ class CalculatorBrain: Printable
         func learnOp(op: Op) {
             knownOps[op.description] = op
         }
-        learnOp(Op.BinaryOperation("×", *, false))
-        learnOp(Op.BinaryOperation("÷", { $1 / $0 }, false))
-        learnOp(Op.BinaryOperation("+", +, true))
-        learnOp(Op.BinaryOperation("−", { $1 - $0 }, true))
+        learnOp(Op.BinaryOperation("×", *, (150, false)))
+        learnOp(Op.BinaryOperation("÷", { $1 / $0 }, (150, true)))
+        learnOp(Op.BinaryOperation("+", +, (140, false)))
+        learnOp(Op.BinaryOperation("−", { $1 - $0 }, (140, true)))
         learnOp(Op.UnaryOperation("sin", { sin($0) }))
         learnOp(Op.UnaryOperation("cos", { cos($0) }))
         learnOp(Op.UnaryOperation("√", sqrt))
@@ -110,32 +120,35 @@ class CalculatorBrain: Printable
         return result
     }
     
-    private func description(ops: [Op]) -> (result: String?, remainngOps: [Op], needParentheses: Bool) {
+    private func description(ops: [Op]) -> (result: String?, remainngOps: [Op], op:Op?) {
         if !ops.isEmpty {
             var remainngOps = ops
             let op = remainngOps.removeLast()
             switch op {
             case .Operand(let operand):
-                return ("\(operand)", remainngOps, false)
+                return ("\(operand)", remainngOps, op)
             case .Variable(let symbol):
-                return ("\(symbol)", remainngOps, false) // TODO: make Optional
+                return ("\(symbol)", remainngOps, op) // TODO: make Optional
             case .NullaryOperation(_, _):
-                return (op.description, remainngOps, false)
+                return (op.description, remainngOps, op)
             case .UnaryOperation(_, _):
                 let desc = description(remainngOps)
                 let result = desc.result ?? "?"
-                return (op.description + "(\(result))", desc.remainngOps, false)
-            case .BinaryOperation(_, _, let needParentheses):
+                return (op.description + "(\(result))", desc.remainngOps, op)
+            case .BinaryOperation(_, _, let parentheses):
+                
                 let desc1 = description(remainngOps)
                 var A = desc1.result ?? "?"
-                A = desc1.needParentheses && !needParentheses ? "(\(A))" : A
+                A = desc1.op?.precedence < op.precedence || (op.precedence == desc1.op?.precedence && parentheses.positionValuable) ? "(\(A))" : A
+                
                 let desc2 = description(desc1.remainngOps)
                 var B = desc2.result ?? "?"
-                B = desc2.needParentheses && !needParentheses ? "(\(B))" : B
-                return ("\(B)\(op)\(A)", desc2.remainngOps, needParentheses)
+                if desc2.op != nil { B = desc2.op!.precedence < op.precedence ? "(\(B))" : B }
+                
+                return ("\(B)\(op)\(A)", desc2.remainngOps, op)
             }
         }
-        return (nil, ops, false)
+        return (nil, ops, nil)
     }
     
     var description: String {
