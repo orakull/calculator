@@ -24,7 +24,7 @@ class CalculatorBrain: Printable
             case .BinaryOperation(_, _, (precedence: let precedence, positionValuable: _)):
                 return precedence
             default:
-                return 200
+                return Int.max
             }
         }
         
@@ -154,12 +154,12 @@ class CalculatorBrain: Printable
     var description: String {
         get {
             var desc = description(opStack)
-            var value = desc.result ?? "error"
+            var value = desc.result ?? ""
             while !desc.remainngOps.isEmpty {
                 desc = description(desc.remainngOps)
                 value = (desc.result ?? "error") + ", " + value
             }
-            return value
+            return value == "" ? "" : value + "="
         }
     }
     
@@ -170,6 +170,11 @@ class CalculatorBrain: Printable
     
     func pushOperand(symbol: String) -> Double? {
         opStack.append(Op.Variable(symbol))
+        return evaluate()
+    }
+    
+    func popOperand() -> Double? {
+        if !opStack.isEmpty { opStack.removeLast() }
         return evaluate()
     }
     

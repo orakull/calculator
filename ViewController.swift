@@ -48,7 +48,7 @@ class ViewController: UIViewController
         if let operation = sender.currentTitle {
             displayValue = brain.performOperation(operation)
         }
-        history.text = brain.description + "="
+        history.text = brain.description
     }
 
     var displayValue: Double? {
@@ -70,7 +70,7 @@ class ViewController: UIViewController
     @IBAction func enter() {
         userIsInMiddleOfTyping = false
         displayValue = brain.pushOperand(displayValue!)
-        history.text = brain.description + "="
+        history.text = brain.description
     }
     
     @IBAction func clear() {
@@ -92,6 +92,9 @@ class ViewController: UIViewController
                 }
                 userIsInMiddleOfTyping = display.text != "0"
             }
+        } else {
+            displayValue = brain.popOperand()
+            history.text = brain.description
         }
     }
     
@@ -109,7 +112,7 @@ class ViewController: UIViewController
     @IBAction func popVariable() {
         if userIsInMiddleOfTyping { enter() }
         displayValue = brain.pushOperand("M")
-        history.text = brain.description + "="
+        history.text = brain.description
     }
 }
 
